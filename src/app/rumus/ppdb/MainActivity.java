@@ -1,6 +1,9 @@
 package app.rumus.ppdb;
 
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
@@ -16,97 +19,117 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import app.rumus.ppdb.lib.DatabaseHandler;
 import app.rumus.ppdb.lib.JSONParser;
-
+import app.rumus.ppdb.lib.ListCodeAdapter;
+import app.rumus.ppdb.lib.SessionHandler;
+import app.rumus.ppdb.model.CodeModel;
 
 public class MainActivity extends Activity {
-	private Button btn1;
-	private TextView txt1,txt2;
+	private ImageButton btnScan;
+	private TextView textNama,textEmail;
 	private JSONParser jsonParser = new JSONParser();
+	private DatabaseHandler dh;
+	private ListCodeAdapter lca;
 	private ProgressDialog pDialog;
+	private SessionHandler sh;
+	private ListView lvCode;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        
-        btn1 = (Button)findViewById(R.id.scan_button);
-        txt1 = (TextView)findViewById(R.id.scan_format);
-        txt2 = (TextView)findViewById(R.id.scan_content);
-        
-        btn1.setOnClickListener(new View.OnClickListener() {
-			
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+
+		btnScan = (ImageButton) findViewById(R.id.btnScan);
+		textNama = (TextView)findViewById(R.id.textNama);
+		lvCode = (ListView)findViewById(R.id.listView1);
+		textEmail = (TextView)findViewById(R.id.textEmail);
+		dh = new DatabaseHandler(getApplicationContext());
+		
+		lca = new ListCodeAdapter(this, dh.getAllCode());
+		lvCode.setAdapter(lca);
+		sh = new SessionHandler(getApplicationContext());
+
+		// get user data from session
+		HashMap<String, String> user = sh.getUserDetails();
+		
+		
+		textNama.setText(user.get(SessionHandler.KEY_NAMA));
+		textEmail.setText(user.get(SessionHandler.KEY_EMAIL));
+		
+		btnScan.setOnClickListener(new View.OnClickListener() {
+
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+				Intent intent = new Intent(
+						"com.google.zxing.client.android.SCAN");
 				intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
 				startActivityForResult(intent, 0);
 			}
 		});
-    }
-    
-    
+	}
 
-    @Override
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// TODO Auto-generated method stub
-		if(requestCode == 0){
-			if(resultCode == RESULT_OK){
+		if (requestCode == 0) {
+			if (resultCode == RESULT_OK) {
 				String contents = data.getStringExtra("SCAN_RESULT");
-				String format = data.getStringExtra("SCAN_RESULT_FORMAT");
-				txt1.setText(contents);
-				txt2.setText(format);
-			} else if(resultCode == RESULT_CANCELED){
-				//CANCEL
+				new sendData(contents).execute();
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Date date = new Date();
+				dh.addCode(new CodeModel(contents,  dateFormat.format(date)));
+				lca = new ListCodeAdapter(this, dh.getAllCode());
+				lvCode.setAdapter(lca);
+			} else if (resultCode == RESULT_CANCELED) {
+				// CANCEL
 			}
 		}
 	}
 
-
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
 
 	@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    
-    class sendData extends AsyncTask<Integer, String, Integer>{
-    	String content;
-    	String format;
-    	int errorcode;
-    	
-    	public sendData(String content,String format) {
+	class sendData extends AsyncTask<Integer, String, Integer> {
+		String content;
+		int errorcode;
+
+		public sendData(String content) {
 			// TODO Auto-generated constructor stub
-    		this.content = content;
-    		this.format = format;
+			this.content = content;
 		}
 
 		@Override
 		protected Integer doInBackground(Integer... arg0) {
 			// TODO Auto-generated method stub
-			if(content != null){
+			if (content != null) {
 				List<NameValuePair> params = new ArrayList<NameValuePair>();
 				params.add(new BasicNameValuePair("idnya", content));
-				
-				JSONObject json = jsonParser.makeHttpRequest("http://localhost/asem/", "POST", params);
-				
+
+				JSONObject json = jsonParser.makeHttpRequest(
+						"http://project.ramazeta.web.id/ppdb/api/index.php?act=check", "POST", params);
+
 				try {
 					errorcode = json.getInt("errorcode");
 				} catch (JSONException e) {
@@ -123,10 +146,10 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated method stub
 			super.onPreExecute();
 			pDialog = new ProgressDialog(MainActivity.this);
-		    pDialog.setMessage("Attempting Login...");
-		    pDialog.setIndeterminate(false);
-		    pDialog.setCancelable(true);
-		    pDialog.show();
+			pDialog.setMessage("Attempting Login...");
+			pDialog.setIndeterminate(false);
+			pDialog.setCancelable(true);
+			pDialog.show();
 		}
 
 		@Override
@@ -134,12 +157,15 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated method stub
 			pDialog.dismiss();
 			super.onPostExecute(result);
-			if(errorcode != 0){
-				Toast.makeText(getApplicationContext(), "ERROR!", Toast.LENGTH_SHORT).show();
+			if (errorcode != 0) {
+				Toast.makeText(getApplicationContext(), "ERROR!",
+						Toast.LENGTH_SHORT).show();
 			} else {
-				Toast.makeText(getApplicationContext(), "Data telah masuk kedalam database", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(),
+						"Data telah masuk kedalam database", Toast.LENGTH_SHORT)
+						.show();
 			}
 		}
-    	
-    }
+
+	}
 }

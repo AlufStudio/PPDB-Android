@@ -3,27 +3,76 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <Button
-        android:id="@+id/scan_button"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="Scan" />
+        android:background="#2d83dd"
+        android:padding="25dp"
+        android:id="@+id/layoutDetail" >
 
-    <TextView
-        android:id="@+id/scan_format"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/scan_button"
-        android:layout_centerHorizontal="true"
-        android:textIsSelectable="true" />
+        <TextView
+            android:id="@+id/textNama"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFF"
+            android:text="Rama Zeta"
+            android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/scan_content"
-        android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/textEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFF"
+            android:layout_below="@+id/textNama"
+            android:layout_marginTop="10dp"
+            android:layout_alignLeft="@+id/textNama"
+            android:layout_toLeftOf="@+id/btnScan"
+            android:text="ramazeta1997@gmail.com"
+             />
+
+        <ImageButton
+            android:id="@+id/btnScan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/img_scan" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/scan_format"
-        android:layout_centerHorizontal="true"
-        android:textIsSelectable="true" />
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/layoutDetail"
+        android:padding="20dp" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/bg_header"
+            android:orientation="vertical"
+            android:padding="10dp" >
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Latest Confirmation Code"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="#FFF" />
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/linearLayout1"
+            android:background="#FFF"
+            android:layout_centerHorizontal="true" >
+        </ListView>
+    </RelativeLayout>
 
 </RelativeLayout>
